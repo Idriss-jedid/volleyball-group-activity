@@ -168,3 +168,31 @@ unchanged on the detected players of the 1,337 test clips. Speed is measured on 
   its CNN was trained with the group loss and copes better with loose or shifted crops.
 - The YOLO family dominates this setting; RT-DETR-L and RetinaNet, although strong on COCO, find fewer
   of the small, distant players at their default input size.
+
+## V3 — test-time augmentation, seeds and final ensemble (kernel `gar-boost`)
+
+Mirror TTA: every clip is also evaluated mirrored (crops flipped, players reversed, `l_*` ↔ `r_*`)
+and the two softmax outputs are averaged. Exact for the image and end-to-end models, approximate
+for the transformer on cached features. No retraining.
+
+| Model | Test acc | Test acc with TTA |
+|---|---:|---:|
+| B1 (ResNet50) | 80.0 | 82.3 |
+| B1 (ConvNeXt-T) | 81.7 | 82.9 |
+| Actor transformer (ResNet50) | 90.8 | 91.5 |
+| Actor transformer (ConvNeXt-T) | 91.6 | 92.1 |
+| End-to-end ResNet50 | 91.5 | 92.3 |
+| End-to-end ConvNeXt-T, 3 seeds (mean ± std) | 92.4 ± 0.3 | 93.0 ± 0.4 |
+
+| Final models | Selection | Test acc | Test macro-F1 |
+|---|---|---:|---:|
+| End-to-end ConvNeXt-T, 3 seeds + TTA, equal weights | none (fixed in advance) | **93.8** | – |
+| **Greedy ensemble over all models** (incl. TTA variants) | models and weights on val | **93.9** | **94.3** |
+
+- TTA is the cheapest gain of the project: +0.5 to +2.3 points for free at inference, largest for
+  the whole-frame models.
+- The two final numbers agree (93.8 / 93.9): one well-trained architecture averaged over seeds and
+  mirror views is as good as the hand-picked mix of 8 models.
+- We did not reach 95%. Published results on this benchmark around 94–95% use stronger video
+  backbones (I3D, ViT) and/or pose keypoints; with ResNet50/ConvNeXt-T player crops, 9 frames and
+  2,152 training clips, ~94% is where this design saturates.

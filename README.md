@@ -17,7 +17,8 @@ spike, pass, winpoint), using the 12 players and their actions (9 classes).
 | **B8 — two-stage LSTM, pooled per team** (the paper's full model) | **91.8** | **81.9** |
 | End-to-end ConvNeXt-T + transformer (group + person losses) | 92.7 | – |
 | Actor transformer, ConvNeXt-T features, Optuna-tuned, 5 seeds | 92.4 ± 0.4 | – |
-| **Greedy ensemble** (models and weights chosen on val) | **93.7** | – |
+| End-to-end ConvNeXt-T, 3 seeds + mirror TTA (equal weights) | 93.8 | – |
+| **Greedy ensemble** (models and weights chosen on val) | **93.9** | – |
 | YOLO11x detections + end-to-end model (no ground-truth boxes) | 85.3 | – |
 
 Full tables, ablations and analysis: [`docs/RESULTS.md`](docs/RESULTS.md).

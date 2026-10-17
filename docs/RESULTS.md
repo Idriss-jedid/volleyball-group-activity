@@ -39,6 +39,34 @@ Person-level models (9 actions):
 - Every baseline beats its paper counterpart by 7–19 points; the backbone (ResNet50 vs AlexNet), the
   full 16:9 frame instead of a centre crop, and the label-swapping horizontal flip all contribute.
 
+## V1 — faithful reproduction of the paper (kernel `gar-v1`)
+
+AlexNet fc7 (4096-d), 224x224 inputs, no augmentation, SGD with momentum 0.9 and a fixed learning
+rate, person LSTM 3000 nodes, scene FC 3000 + LSTM 2000 nodes, stage-wise training. Paper numbering.
+
+| Paper baseline | Test acc | Test macro-F1 | Paper |
+|---|---:|---:|---:|
+| B1 — image classification | 63.9 | 63.9 | 66.7 |
+| B2 — person classification (ImageNet fc7) | *re-running* | | 64.6 |
+| B3 — fine-tuned person classification | 68.1 | 62.2 | 68.1 |
+| B4 — temporal model, image features | 66.0 | 65.9 | 63.1 |
+| B5 — temporal model, person features (ImageNet fc7) | *re-running* | | 67.6 |
+| B6 — two-stage without LSTM 1 (2 groups) | 85.4 | 86.2 | 74.7 |
+| B7 — two-stage without LSTM 2 (2 groups) | 81.9 | 82.7 | 80.2 |
+| **Full two-stage model (2 groups)** | **85.9** | **86.5** | **81.9** |
+| person classifier / person LSTM (9 actions) | 79.8 / 79.3 | 56.0 / 53.9 | – |
+
+- **The reproduction validates the implementation**: B1, B3 and B7 land within 3 points of the
+  paper (B3 exactly), and the full model reproduces the paper's ranking — the two-stage model with
+  team pooling is the best, and both LSTM-ablated variants are below it.
+- The models on fine-tuned features come out *above* the paper (full model 85.9 vs 81.9, B6 85.4 vs
+  74.7). Likely reasons: modern training details we could not match exactly (PyTorch defaults,
+  early stopping on val, a higher learning rate than Caffe's 1e-5), and 9 tracked frames where the
+  paper had 10.
+- The first runs of B2 and B5 (frozen ImageNet fc7) diverged: raw fc7 activations with a 1e-2
+  learning rate gave a first-epoch training loss of ~100. They are re-run with 1e-3; the full-model
+  1-group / avg-pool / 4-group variants (Table 6) ran out of the 20 GB Kaggle disk and are re-run too.
+
 ## V2 — ablations (kernel `gar-ablation`)
 
 | Run | Change | Test acc | Test macro-F1 | Paper |
@@ -88,6 +116,26 @@ Late fusion (weights chosen on val, test scored once):
   better for the group transformer (91.6 vs 90.8) and clearly better end to end (92.7 vs 91.5).
 - Ensembles add 1–2 points: whole-frame models (B4, b1_cnx) are the most useful partners of the
   player models, because they see what the player crops miss (ball, net, celebration shots).
+
+## V3 — hyper-parameter search with Optuna (kernel `gar-optuna`)
+
+TPE sampler with median pruning, selection on val only; the best configuration is then retrained
+with 5 seeds (test evaluated once per seed) and the seeds are averaged.
+
+| Search | Trials | Best val | Test, 5 seeds (mean ± std) | Test, seed ensemble |
+|---|---:|---:|---:|---:|
+| Actor transformer (ResNet50 features) | 50 | 90.1 | 91.6 ± 0.5 | 92.0 |
+| **Actor transformer (ConvNeXt-T features)** | 50 | 91.2 | **92.4 ± 0.4** | **93.6** |
+| B8 | 40 | 90.2 | 91.4 ± 0.2 | 91.5 |
+
+Greedy ensemble selection (Caruana) over every trained 8-class model, weights chosen on val:
+**93.7% test accuracy, 94.1 macro-F1** (val 93.8), mixing whole-frame models (B1, B1-ConvNeXt, B4),
+player models (B3, B6, B8-ConvNeXt, Optuna B8 seeds) and the end-to-end and transformer models.
+
+- The seed spread (±0.2–0.5) is the size of most differences between single models above: gaps
+  under ~1 point between two single runs should not be over-interpreted.
+- Averaging 5 seeds of one architecture is worth +1.2 points for the ConvNeXt transformer, as much
+  as mixing different architectures.
 
 ## V3 — detected boxes instead of ground-truth tracks (kernel `gar-detect`)
 

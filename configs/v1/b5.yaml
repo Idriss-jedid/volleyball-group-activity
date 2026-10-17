@@ -10,3 +10,5 @@ model_args:
   fc_dim: 3000
   scene_hidden: 2000
   dropout: 0.5
+train:
+  lr: 1.0e-3   # 1e-2 diverges on raw ImageNet fc7 (train loss ~100 in the first epoch)

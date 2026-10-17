@@ -17,6 +17,7 @@ Step names: any config name trains that config, plus
   ensemble_greedy                                         greedy (Caruana) selection over every run
   optuna/<space>                                          gar.tune with configs/optuna/<space>.yaml
   tta/<run>                                               mirror test-time augmentation -> results/<run>_tta
+  drop_crops                                              delete the crop cache (disk is limited to 20 GB)
 """
 
 import contextlib
@@ -303,8 +304,11 @@ def main():
             for runs in ENSEMBLES:
                 if all((WORK / "results" / r / "logits_test.npz").exists() for r in runs):
                     run("ensemble_" + "+".join(runs), py + ["gar.ensemble", "--runs", *runs])
+        elif step == "drop_crops":  # free 3.4 GB of the 20 GB working disk once no step needs crops
+            shutil.rmtree("data/processed/crops", ignore_errors=True)
         else:
             run(step, py + ["gar.train", "--config", cfg(step), "--name", step])
+            (WORK / "results" / step / "last.pt").unlink(missing_ok=True)  # only needed to resume
 
     # keep the output small: crops can be rebuilt in ~6 min, last.pt is only for resuming
     shutil.rmtree("data/processed/crops", ignore_errors=True)

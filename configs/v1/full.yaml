@@ -1,0 +1,12 @@
+# Paper full model — Two-stage Hierarchical Model, 2 groups, max pool. Paper: 81.9%.
+defaults: features.yaml
+model: hier
+features: v1_ft
+model_args:
+  person_lstm: {checkpoint: v1/person_lstm/best.pt, hidden: 3000}
+  scene_lstm: true
+  groups: 2
+  pool: max
+  fc_dim: 3000
+  scene_hidden: 2000
+  dropout: 0.5

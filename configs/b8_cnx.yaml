@@ -1,0 +1,6 @@
+# B8 on ConvNeXt-T player features.
+defaults: b8.yaml
+features: person_cnx
+model_args:
+  person_lstm:
+    checkpoint: person_lstm_cnx/best.pt

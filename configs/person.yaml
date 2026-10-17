@@ -1,0 +1,13 @@
+# B3-A: person action classifier, ResNet50 on player crops -> 9 actions.
+# standing is 68.7% of boxes: weight the loss and select on macro-F1, not accuracy.
+defaults: base.yaml
+model: person
+
+model_args:
+  dropout: 0.3
+
+train:
+  batch_size: 32
+  epochs: 15
+  class_weights: sqrt_inv   # weight_c ~ 1/sqrt(freq_c): lifts rare actions without exploding jumping
+  select_metric: macro_f1

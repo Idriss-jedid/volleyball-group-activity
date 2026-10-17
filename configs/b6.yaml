@@ -1,0 +1,20 @@
+# B6: hierarchical model ablation (see src/gar/models/hier.py). Paper equivalent B6 without LSTM 1: 74.7%.
+defaults: base.yaml
+model: hier
+features: person_ft
+
+model_args:
+  person_lstm: null
+  scene_lstm: true
+  groups: 1             # 1 = pool all players, 2 = left team / right team
+  pool: max
+  fc_dim: 1024
+  scene_hidden: 512
+  dropout: 0.5
+
+train:
+  batch_size: 64
+  num_workers: 0
+  epochs: 60
+  lr: 1.0e-3
+  early_stopping_patience: 10

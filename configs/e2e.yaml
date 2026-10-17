@@ -1,0 +1,26 @@
+# End-to-end (beyond the paper): CNN on player crops + actor transformer, group + person losses.
+# Backbone initialised from the B3-A person classifier (results/person/best.pt). Needs a T4 (AMP).
+defaults: base.yaml
+model: e2e
+
+data:
+  e2e_frames: [1, 3, 5, 7]   # indices into the 9 tracked frames: target-4, -2, target, +2
+  hflip: true                # exact mirror: crops flipped, players reversed, l <-> r
+
+model_args:
+  backbone: resnet50
+  init: person/best.pt       # relative to paths.results
+  d_model: 256
+  layers: 2
+  heads: 4
+  dropout: 0.2
+  person_weight: 0.5
+  backbone_lr_scale: 0.1     # backbone lr = 0.1 x head lr
+
+train:
+  batch_size: 4              # 4 clips x 4 frames x 12 players = 192 crops per step
+  num_workers: 4
+  epochs: 20
+  lr: 3.0e-4
+  weight_decay: 0.05
+  early_stopping_patience: 6

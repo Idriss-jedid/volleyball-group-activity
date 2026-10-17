@@ -1,0 +1,7 @@
+# B3-A with a ConvNeXt-T backbone instead of ResNet50 (features are 768-d).
+defaults: person.yaml
+model_args:
+  backbone: convnext_tiny
+train:
+  lr: 1.0e-4
+  weight_decay: 0.05

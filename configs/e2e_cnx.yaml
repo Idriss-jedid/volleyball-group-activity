@@ -1,0 +1,5 @@
+# End-to-end with a ConvNeXt-T backbone, initialised from the ConvNeXt person classifier.
+defaults: e2e.yaml
+model_args:
+  backbone: convnext_tiny
+  init: person_cnx/best.pt

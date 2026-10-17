@@ -1,0 +1,21 @@
+# V1 — faithful reproduction of the paper (extension, arXiv 1607.02643): AlexNet fc7 features,
+# 224x224 inputs, no augmentation, SGD with momentum 0.9 and a fixed learning rate.
+# Deviations, documented in docs/RESULTS.md: PyTorch instead of Caffe; learning rate 1e-3 for CNN
+# fine-tuning and 1e-2 for models on cached features instead of 1e-5; stage-wise person LSTM on
+# cached fc7 instead of CNN+LSTM trained jointly; 9 tracked frames instead of 10.
+defaults: ../base.yaml
+
+data:
+  frame_size: [224, 224]
+  crop_size: [224, 224]
+  augment: false
+
+train:
+  optimizer: sgd
+  scheduler: constant
+  lr: 1.0e-3
+  weight_decay: 5.0e-4
+  label_smoothing: 0.0
+  batch_size: 32
+  epochs: 30
+  early_stopping_patience: 8

@@ -1,0 +1,4 @@
+# e2e_cnx with another seed, for a seed ensemble.
+defaults: e2e_cnx.yaml
+train:
+  seed: 1

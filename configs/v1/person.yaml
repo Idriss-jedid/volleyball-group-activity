@@ -1,0 +1,4 @@
+# Person action classifier: AlexNet fine-tuned on player crops (fc7 used by B3, B6, B7, full model).
+defaults: base.yaml
+model: person
+model_args: {backbone: alexnet, dropout: 0.0}

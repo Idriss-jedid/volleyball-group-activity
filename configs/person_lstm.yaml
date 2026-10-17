@@ -1,0 +1,17 @@
+# Stage 1 of the hierarchical model: LSTM over each player's 9 cached B3-A features -> 9 actions.
+defaults: base.yaml
+model: person_lstm
+features: person_ft
+
+model_args:
+  hidden: 512            # paper: 3000 on AlexNet fc7; far too big for 2k training clips here
+  dropout: 0.5
+
+train:
+  batch_size: 256
+  num_workers: 0
+  epochs: 40
+  lr: 1.0e-3
+  class_weights: sqrt_inv
+  select_metric: macro_f1
+  early_stopping_patience: 8

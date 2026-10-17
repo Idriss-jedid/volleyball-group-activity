@@ -1,0 +1,18 @@
+# Ablation of B3: team-wise pooling (2 groups) without any temporal model.
+# Paper (AlexNet): 68.1% on Volleyball. Needs: configs/person.yaml trained + features extracted.
+defaults: base.yaml
+model: b3
+features: person_ft      # data/features/person_ft, from gar.features.extractor
+
+model_args:
+  groups: 2              # team-wise pooling
+  pool: max
+  hidden: 512
+  dropout: 0.5
+
+train:
+  batch_size: 64
+  num_workers: 0         # features are memory-mapped: worker start-up costs more than it saves
+  epochs: 60
+  lr: 1.0e-3
+  early_stopping_patience: 10

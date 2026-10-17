@@ -1,0 +1,13 @@
+# Optuna search space for B8 (hierarchical model, team-wise pooling) on cached features.
+base: ../b8.yaml
+trials: 40
+epochs: 40
+space:
+  train.lr: {type: float, low: 1.0e-4, high: 3.0e-3, log: true}
+  train.weight_decay: {type: float, low: 1.0e-5, high: 1.0e-2, log: true}
+  train.label_smoothing: {type: float, low: 0.0, high: 0.2}
+  train.batch_size: {type: categorical, choices: [32, 64, 128]}
+  model_args.fc_dim: {type: categorical, choices: [512, 1024, 2048]}
+  model_args.scene_hidden: {type: categorical, choices: [256, 512, 1024]}
+  model_args.dropout: {type: float, low: 0.1, high: 0.6}
+  model_args.pool: {type: categorical, choices: [max, avg]}

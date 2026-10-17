@@ -1,0 +1,12 @@
+# Paper B5 — Temporal Model with Person Features: ImageNet fc7 pooled over people -> LSTM. Paper: 67.6%.
+defaults: features.yaml
+model: hier
+features: v1_imagenet
+model_args:
+  person_lstm: null
+  scene_lstm: true
+  groups: 1
+  pool: max
+  fc_dim: 3000
+  scene_hidden: 2000
+  dropout: 0.5

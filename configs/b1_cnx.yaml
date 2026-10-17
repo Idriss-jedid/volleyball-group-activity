@@ -1,0 +1,7 @@
+# B1 with a ConvNeXt-T backbone.
+defaults: b1.yaml
+model_args:
+  backbone: convnext_tiny
+train:
+  lr: 1.0e-4
+  weight_decay: 0.05

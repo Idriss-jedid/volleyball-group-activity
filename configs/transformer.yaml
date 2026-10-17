@@ -1,0 +1,22 @@
+# Actor transformer (beyond the paper): attention over all players x frames, with box positions.
+defaults: base.yaml
+model: transformer
+features: person_ft
+
+data:
+  hflip: true            # mirror the scene (reverse players, cx -> 1-cx, swap l/r label)
+
+model_args:
+  d_model: 256
+  layers: 2
+  heads: 4
+  dropout: 0.2
+  use_boxes: true
+
+train:
+  batch_size: 64
+  num_workers: 0
+  epochs: 80
+  lr: 3.0e-4
+  weight_decay: 0.05
+  early_stopping_patience: 15

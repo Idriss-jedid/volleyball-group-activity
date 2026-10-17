@@ -1,0 +1,22 @@
+# Ablation of B8: 4 spatial sub-groups instead of 2 teams.
+defaults: base.yaml
+model: hier
+features: person_ft
+
+model_args:
+  person_lstm:
+    checkpoint: person_lstm/best.pt   # relative to paths.results
+    hidden: 512
+  scene_lstm: true
+  groups: 4             # left-back, left-front, right-front, right-back (paper: 81.5)
+  pool: max
+  fc_dim: 1024
+  scene_hidden: 512
+  dropout: 0.5
+
+train:
+  batch_size: 64
+  num_workers: 0
+  epochs: 60
+  lr: 1.0e-3
+  early_stopping_patience: 10

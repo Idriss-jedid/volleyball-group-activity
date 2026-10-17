@@ -1,0 +1,11 @@
+# B1-tuned: fine-tuned ResNet50 on the middle frame -> 8 group activities.
+# Paper (AlexNet): 66.7% on Volleyball.
+defaults: base.yaml
+model: b1
+
+model_args:
+  dropout: 0.5
+
+train:
+  batch_size: 8          # 224x384 frames: bs 16 does not fit in 4 GB in fp32
+  epochs: 15

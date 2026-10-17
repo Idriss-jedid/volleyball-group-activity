@@ -1,0 +1,14 @@
+# Optuna search space for the actor transformer on ConvNeXt-T features (gar.tune). Keys are dotted config paths.
+base: ../transformer_cnx.yaml
+trials: 50
+epochs: 40            # per trial; early stopping and median pruning still apply
+space:
+  train.lr: {type: float, low: 1.0e-4, high: 1.5e-3, log: true}
+  train.weight_decay: {type: float, low: 1.0e-3, high: 0.1, log: true}
+  train.label_smoothing: {type: float, low: 0.0, high: 0.2}
+  train.batch_size: {type: categorical, choices: [32, 64, 128]}
+  model_args.d_model: {type: categorical, choices: [128, 256, 384]}
+  model_args.layers: {type: int, low: 1, high: 4}
+  model_args.heads: {type: categorical, choices: [4, 8]}
+  model_args.dropout: {type: float, low: 0.0, high: 0.4}
+  data.hflip: {type: categorical, choices: [true, false]}

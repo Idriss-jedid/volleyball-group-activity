@@ -1,0 +1,5 @@
+# Paper B4 — Temporal Model with Image Features: B1 fc7 over the frames -> LSTM. Paper: 63.1%.
+defaults: features.yaml
+model: b4
+features: v1_image
+model_args: {hidden: 2000, dropout: 0.5}

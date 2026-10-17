@@ -1,0 +1,15 @@
+# B4: B1-tuned image features over 9 frames -> LSTM. Paper (AlexNet): 63.1% — below B1 (66.7%).
+defaults: base.yaml
+model: b4
+features: b1_image       # extractor --level image --config configs/b1.yaml --checkpoint results/b1/best.pt
+
+model_args:
+  hidden: 512
+  dropout: 0.5
+
+train:
+  batch_size: 64
+  num_workers: 0
+  epochs: 60
+  lr: 1.0e-3
+  early_stopping_patience: 10

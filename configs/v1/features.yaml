@@ -1,0 +1,8 @@
+# shared by the V1 models that train on cached fc7 features
+defaults: base.yaml
+train:
+  lr: 1.0e-2
+  batch_size: 64
+  num_workers: 0
+  epochs: 60
+  early_stopping_patience: 10

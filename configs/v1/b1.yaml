@@ -1,0 +1,4 @@
+# Paper B1 — Image Classification: AlexNet fine-tuned on the frame. Paper: 66.7%.
+defaults: base.yaml
+model: b1
+model_args: {backbone: alexnet, dropout: 0.0}

@@ -1,0 +1,9 @@
+# smoke overlay + a tiny end-to-end setting that fits the 4 GB GTX 1650
+paths:
+  results: results_smoke
+  features: data/features_smoke
+data:
+  only_videos: [1, 0, 4]
+  e2e_frames: [5]
+train:
+  batch_size: 1

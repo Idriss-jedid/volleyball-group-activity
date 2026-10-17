@@ -1,0 +1,6 @@
+# Paper B2 — Person Classification: ImageNet AlexNet fc7 (not fine-tuned), pooled over all people,
+# softmax. Paper: 64.6%.
+defaults: features.yaml
+model: b3
+features: v1_imagenet
+model_args: {groups: 1, pool: max, hidden: 0, dropout: 0.5}

@@ -1,0 +1,12 @@
+# Paper B6 — Two-stage Model without LSTM 1 (2 groups). Paper: 74.7%.
+defaults: features.yaml
+model: hier
+features: v1_ft
+model_args:
+  person_lstm: null
+  scene_lstm: true
+  groups: 2
+  pool: max
+  fc_dim: 3000
+  scene_hidden: 2000
+  dropout: 0.5

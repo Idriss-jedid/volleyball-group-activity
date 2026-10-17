@@ -1,0 +1,6 @@
+# Local end-to-end check on 3 videos (one per split): GAR_OVERLAY=configs/overlays/smoke.yaml
+paths:
+  results: results_smoke
+  features: data/features_smoke
+data:
+  only_videos: [1, 0, 4]

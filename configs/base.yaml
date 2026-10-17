@@ -1,0 +1,27 @@
+# Shared settings for all baselines
+paths:
+  videos: D:/volleyball.zip                      # dataset zip, or a folder containing videos/ (Kaggle)
+  tracks: data/raw/kaggle_annot/annot_all.pkl    # course pkl from Kaggle: 9 tracked frames per clip
+  annotations: data/processed/annotations.pkl    # built by `python -m gar.data.annotations`
+  crops: data/processed/crops                    # built by `python -m gar.data.crops`
+  features: data/features
+  results: results
+
+data:
+  num_frames: 9          # T: target-5 .. target+3, the 9 frames the tracks cover
+  max_players: 12        # K — upper bound, pad and mask
+  frame_size: [224, 384] # H, W for whole frames: keeps the 16:9 court, no centre crop
+  crop_size: [224, 112]  # H, W for player crops: players are ~2.3x taller than wide
+
+backbone: resnet50
+
+train:
+  seed: 42
+  amp: false             # GTX 1650: fp16 is ~4x slower (no tensor cores). true on Colab/Kaggle.
+  batch_size: 16
+  num_workers: 4
+  epochs: 20
+  lr: 1.0e-4
+  weight_decay: 1.0e-4
+  label_smoothing: 0.1
+  early_stopping_patience: 5   # monitored on val, never on test

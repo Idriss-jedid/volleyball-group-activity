@@ -1,0 +1,3 @@
+# Person LSTM on the ConvNeXt-T player features.
+defaults: person_lstm.yaml
+features: person_cnx

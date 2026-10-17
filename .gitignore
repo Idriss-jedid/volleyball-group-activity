@@ -1,0 +1,33 @@
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/
+.opencode/
+
+# heavy / generated
+data/raw/*
+data/processed/*
+data/features/*
+results/*
+*.pth
+*.pt
+*.h5
+!**/.gitkeep
+
+# kaggle staging and downloaded outputs
+build/
+results_kaggle/
+*.egg-info/
+
+results_smoke/
+data/features_smoke/
+
+# not redistributable / not ours: course scripts, papers, generated notes
+course/
+papers/
+docs/deep-research-report.md
+.opencode/
+.claude/
+*.db
+runs/

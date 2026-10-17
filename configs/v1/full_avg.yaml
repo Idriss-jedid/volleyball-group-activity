@@ -1,0 +1,12 @@
+# Paper Table 6 — full model, 2 groups, avg pool. Paper: 80.7%.
+defaults: features.yaml
+model: hier
+features: v1_ft
+model_args:
+  person_lstm: {checkpoint: v1/person_lstm/best.pt, hidden: 3000}
+  scene_lstm: true
+  groups: 2
+  pool: avg
+  fc_dim: 3000
+  scene_hidden: 2000
+  dropout: 0.5

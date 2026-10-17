@@ -1,0 +1,20 @@
+# B6 with team-wise pooling: the paper reports its B6 (= this) with 2 groups, 74.7%.
+defaults: base.yaml
+model: hier
+features: person_ft
+
+model_args:
+  person_lstm: null
+  scene_lstm: true
+  groups: 2             # paper B6 setting (2 groups)
+  pool: max
+  fc_dim: 1024
+  scene_hidden: 512
+  dropout: 0.5
+
+train:
+  batch_size: 64
+  num_workers: 0
+  epochs: 60
+  lr: 1.0e-3
+  early_stopping_patience: 10

@@ -1,0 +1,5 @@
+# Paper B3 — Fine-tuned Person Classification: fine-tuned fc7 pooled over all people, softmax. Paper: 68.1%.
+defaults: features.yaml
+model: b3
+features: v1_ft
+model_args: {groups: 1, pool: max, hidden: 0, dropout: 0.5}

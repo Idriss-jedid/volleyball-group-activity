@@ -39,7 +39,7 @@ Person-level models (9 actions):
 - Every baseline beats its paper counterpart by 7–19 points; the backbone (ResNet50 vs AlexNet), the
   full 16:9 frame instead of a centre crop, and the label-swapping horizontal flip all contribute.
 
-## V1 — faithful reproduction of the paper (kernel `gar-v1`)
+## V1 — faithful reproduction of the paper (kernels `gar-v1`, `gar-v1b`)
 
 AlexNet fc7 (4096-d), 224x224 inputs, no augmentation, SGD with momentum 0.9 and a fixed learning
 rate, person LSTM 3000 nodes, scene FC 3000 + LSTM 2000 nodes, stage-wise training. Paper numbering.
@@ -47,25 +47,34 @@ rate, person LSTM 3000 nodes, scene FC 3000 + LSTM 2000 nodes, stage-wise traini
 | Paper baseline | Test acc | Test macro-F1 | Paper |
 |---|---:|---:|---:|
 | B1 — image classification | 63.9 | 63.9 | 66.7 |
-| B2 — person classification (ImageNet fc7) | *re-running* | | 64.6 |
+| B2 — person classification (ImageNet fc7) | 47.9 | 45.0 | 64.6 |
 | B3 — fine-tuned person classification | 68.1 | 62.2 | 68.1 |
 | B4 — temporal model, image features | 66.0 | 65.9 | 63.1 |
-| B5 — temporal model, person features (ImageNet fc7) | *re-running* | | 67.6 |
+| B5 — temporal model, person features (ImageNet fc7) | 51.1 | 48.2 | 67.6 |
 | B6 — two-stage without LSTM 1 (2 groups) | 85.4 | 86.2 | 74.7 |
 | B7 — two-stage without LSTM 2 (2 groups) | 81.9 | 82.7 | 80.2 |
-| **Full two-stage model (2 groups)** | **85.9** | **86.5** | **81.9** |
-| person classifier / person LSTM (9 actions) | 79.8 / 79.3 | 56.0 / 53.9 | – |
+| **Full two-stage model (2 groups, max)** | **85.9** | **86.5** | **81.9** |
 
-- **The reproduction validates the implementation**: B1, B3 and B7 land within 3 points of the
-  paper (B3 exactly), and the full model reproduces the paper's ranking — the two-stage model with
-  team pooling is the best, and both LSTM-ablated variants are below it.
-- The models on fine-tuned features come out *above* the paper (full model 85.9 vs 81.9, B6 85.4 vs
-  74.7). Likely reasons: modern training details we could not match exactly (PyTorch defaults,
-  early stopping on val, a higher learning rate than Caffe's 1e-5), and 9 tracked frames where the
-  paper had 10.
-- The first runs of B2 and B5 (frozen ImageNet fc7) diverged: raw fc7 activations with a 1e-2
-  learning rate gave a first-epoch training loss of ~100. They are re-run with 1e-3; the full-model
-  1-group / avg-pool / 4-group variants (Table 6) ran out of the 20 GB Kaggle disk and are re-run too.
+Table 6 of the paper (pooling variants of the full model):
+
+| Full model | Test acc | Paper |
+|---|---:|---:|
+| 1 group, max pool | 74.2 | 70.3 |
+| 2 groups, max pool | 85.9 | 81.9 |
+| 2 groups, avg pool | 85.2 | 80.7 |
+| 4 groups, max pool | 86.2 | 81.5 |
+
+- **The reproduction validates the implementation.** B1, B3 (exactly) and B7 land within 3 points of
+  the paper, and every conclusion of the paper reproduces: the two-stage model beats all baselines,
+  team pooling is decisive (1 group 74.2 → 2 groups 85.9, paper 70.3 → 81.9), max beats average
+  pooling, and 4 sub-groups bring nothing over 2 teams.
+- The models on fine-tuned features come out ~4 points *above* the paper (full model 85.9 vs 81.9).
+  Likely reasons: training details that cannot be matched exactly (PyTorch instead of Caffe, early
+  stopping on val, a learning rate of 1e-3/1e-2 instead of 1e-5) and 9 tracked frames instead of 10.
+- **The one gap is the frozen-ImageNet baselines B2 and B5** (47.9 / 51.1 vs 64.6 / 67.6). With raw
+  ImageNet fc7 a 1e-2 learning rate diverged (first-epoch loss ~100); 1e-3 trains but stays far below
+  the paper. The paper does not detail how these features were normalized or trained, so this part
+  is not reproduced. It does not affect the paper's main claims, which rely on fine-tuned features.
 
 ## V2 — ablations (kernel `gar-ablation`)
 

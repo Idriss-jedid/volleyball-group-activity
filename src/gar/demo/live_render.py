@@ -36,10 +36,27 @@ from gar.demo.story import (
     chip,
     verdict,
 )
-from gar.detect.tracker import iou_matrix
+from gar.detect.tracker import iou_matrix, track
 
 FPS = 25
+TRAIL = 14  # frames of foot trail behind each tracked player
+PALETTE = [(250, 204, 21), (52, 211, 153), (244, 114, 182), (96, 165, 250), (251, 146, 60), (167, 139, 250),
+           (45, 212, 191), (248, 113, 113), (163, 230, 53), (232, 121, 249), (56, 189, 248), (253, 186, 116)]
 ORDER = ["l_set", "l_spike", "l_pass", "l_winpoint", "r_set", "r_spike", "r_pass", "r_winpoint"]
+
+
+def track_ids(per_frame):
+    """Tracker identity of every box (the same IoU tracker as the pipeline), numbered 1, 2, ... left to right."""
+    frames = [[(tuple(p["box"]), 1.0) for p in e["players"]] for e in per_frame]
+    where = {id(d): (t, i) for t, dets in enumerate(frames) for i, d in enumerate(dets)}
+    tracks = track(frames)
+    start = lambda tid: (min(tracks[tid]), sum(tracks[tid][min(tracks[tid])][0][::2]))
+    ids = [[None] * len(e["players"]) for e in per_frame]
+    for n, tid in enumerate(sorted(tracks, key=start), 1):
+        for det in tracks[tid].values():
+            t, i = where[id(det)]
+            ids[t][i] = n
+    return ids
 
 
 def smoothed_probs(per_frame, activities, alpha=0.3):
@@ -87,7 +104,7 @@ def steady_actions(per_frame, t, window=4):
     return [v.most_common(1)[0][0] if v else None for v in votes]
 
 
-def panel(img, players, actions, mode, scale):
+def panel(img, players, actions, mode, scale, ids=None, trails=None):
     p = img.copy().convert("RGBA")
     over = Image.new("RGBA", (PW, PH), (0, 0, 0, 0))
     d = ImageDraw.Draw(over)
@@ -99,7 +116,17 @@ def panel(img, players, actions, mode, scale):
         if team:
             xs.append(((x1 + x2) / 2, team))
         if mode == "find":
-            d.rounded_rectangle((x1, y1, x2, y2), radius=4, outline=(255, 255, 255, 240), width=3)
+            n = ids[players.index(pl)] if ids else None
+            c = PALETTE[(n - 1) % len(PALETTE)] if n else (255, 255, 255)
+            path = [(x * scale, y * scale) for x, y in (trails or {}).get(n, [])]
+            for k in range(1, len(path)):  # the trail fades out behind the player
+                d.line((*path[k - 1], *path[k]), fill=c + (int(60 + 180 * k / len(path)),), width=4)
+            d.rounded_rectangle((x1, y1, x2, y2), radius=4, outline=c + (250,), width=3)
+            if n:
+                tag = f"#{n}"
+                tw = d.textlength(tag, font=F_GTAG)
+                d.rounded_rectangle((x1, y1 - 26, x1 + tw + 12, y1 - 3), radius=6, fill=c + (250,))
+                d.text((x1 + 6, y1 - 25), tag, font=F_GTAG, fill=(10, 14, 26))
         elif mode == "actions":
             word = WORDS.get(act)
             c = ACTION_RGB.get(word, (148, 163, 184))
@@ -165,6 +192,12 @@ def main():
     per_frame, frames = live["per_frame"], live["frames"]
     probs = smoothed_probs(per_frame, live["activities"])
     leaders = steady_leaders(probs)
+    ids = track_ids(per_frame)
+    feet = {}  # track number -> [(frame, x, y)] of the bottom centre of its box
+    for t, e in enumerate(per_frame):
+        for n, pl in zip(ids[t], e["players"]):
+            if n:
+                feet.setdefault(n, []).append((t, (pl["box"][0] + pl["box"][2]) / 2, pl["box"][3]))
     truth_at = {}
     for g in live["ground_truth"]:  # annotated label shown around its moment
         for t in range(g["index"] - 4, g["index"] + 9):
@@ -180,12 +213,13 @@ def main():
         players = per_frame[t]["players"]
         actions = steady_actions(per_frame, t)
         canvas = Image.new("RGB", (W, H), BG)
-        canvas.paste(panel(small, players, actions, "find", scale), (0, 0))
+        trails = {n: [(x, y) for u, x, y in pts if t - TRAIL <= u <= t] for n, pts in feet.items()}
+        canvas.paste(panel(small, players, actions, "find", scale, ids[t], trails), (0, 0))
         canvas.paste(panel(small, players, actions, "actions", scale), (PW, 0))
         canvas.paste(panel(small, players, actions, "teams", scale), (0, PH))
         canvas.paste(bars(probs[t], leaders[t], truth_at.get(t)), (PW, PH))
         d = ImageDraw.Draw(canvas, "RGBA")
-        chip(d, 18, 16, "1  ·  find the players", F_PANEL, dot=(255, 255, 255))
+        chip(d, 18, 16, "1  ·  find and track the players", F_PANEL, dot=PALETTE[0])
         chip(d, PW + 18, 16, "2  ·  what each player does", F_PANEL, dot=ACTION_RGB["spike"])
         chip(d, 18, PH + 16, "3  ·  split the two teams", F_PANEL, dot=LEFT)
         chip(d, PW + 18, PH + 16, "4  ·  what the team is doing", F_PANEL, dot=OK)

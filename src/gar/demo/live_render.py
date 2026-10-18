@@ -16,29 +16,49 @@ import subprocess
 from collections import Counter
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
 from gar.data.frames import FrameSource
-from gar.demo.render import BG, LEFT, MUT, OK, RIGHT, TXT
-from gar.demo.story import (
-    ACTION_RGB,
-    F_BAR,
-    F_GTAG,
-    F_OK,
-    F_PANEL,
-    F_VERDICT,
-    PH,
-    PLAIN,
-    PW,
-    WORDS,
-    H,
-    W,
-    chip,
-    verdict,
-)
 from gar.detect.tracker import iou_matrix, track
 
 FPS = 25
+W, H = 1920, 1080
+PW, PH = W // 2, H // 2  # four 960x540 panels
+BG, TXT, MUT = (10, 14, 26), (232, 237, 247), (139, 151, 179)
+LEFT, RIGHT, OK = (96, 165, 250), (251, 146, 60), (52, 211, 153)  # team colours, verdict colour
+
+
+def font(names, size):
+    for name in names:
+        try:
+            return ImageFont.truetype(name, size)
+        except OSError:
+            continue
+    return ImageFont.load_default()
+
+
+BLACK = ["seguibl.ttf", "segoeuib.ttf", "arialbd.ttf", "DejaVuSans-Bold.ttf"]
+BOLD = ["segoeuib.ttf", "arialbd.ttf", "DejaVuSans-Bold.ttf"]
+F_PANEL, F_GTAG, F_BAR = font(BOLD, 30), font(BOLD, 19), font(BOLD, 26)
+F_VERDICT, F_OK = font(BLACK, 44), font(BOLD, 24)
+WORDS = {
+    "spiking": "spike",
+    "blocking": "block",
+    "setting": "set",
+    "digging": "dig",
+    "falling": "fall",
+    "jumping": "jump",
+}
+ACTION_RGB = {
+    "spike": (251, 113, 133),
+    "block": (167, 139, 250),
+    "set": (52, 211, 153),
+    "dig": (250, 204, 21),
+    "fall": (248, 113, 113),
+    "jump": (244, 114, 182),
+}  # standing / waiting / moving players get no tag: less clutter
+ACTIVITY = {"set": "SET", "spike": "SPIKE", "pass": "PASS", "winpoint": "WINS THE POINT"}
+KIND = {"set": "set", "spike": "spike", "pass": "pass", "winpoint": "point won"}
 TRAIL = 14  # frames of foot trail behind each tracked player
 PALETTE = [
     (250, 204, 21),
@@ -55,6 +75,24 @@ PALETTE = [
     (253, 186, 116),
 ]
 ORDER = ["l_set", "l_spike", "l_pass", "l_winpoint", "r_set", "r_spike", "r_pass", "r_winpoint"]
+PLAIN = {a: ("left" if a[0] == "l" else "right") + " · " + KIND[a.split("_", 1)[1]] for a in ORDER}
+
+
+def verdict(activity):
+    side, kind = activity.split("_", 1)
+    return ("LEFT TEAM" if side == "l" else "RIGHT TEAM"), ACTIVITY[kind], LEFT if side == "l" else RIGHT
+
+
+def chip(d, x, y, text, f, fill=(10, 14, 26, 215), color=TXT, dot=None):
+    h = f.size + 22
+    tw = d.textlength(text, font=f)
+    pad = h if dot else 18
+    d.rounded_rectangle((x, y, x + tw + pad + 18, y + h), radius=h // 2, fill=fill)
+    if dot:
+        r = f.size // 3
+        d.ellipse((x + h // 2 - r, y + h // 2 - r, x + h // 2 + r, y + h // 2 + r), fill=dot)
+    d.text((x + pad, y + 9), text, font=f, fill=color)
+    return x + tw + pad + 18
 
 
 def track_ids(per_frame):

@@ -1,8 +1,0 @@
-# smoke overlay for gar.tune: 3 videos, tiny epochs
-paths:
-  results: results_smoke
-  features: data/features_smoke
-data:
-  only_videos: [1, 0, 4]
-train:
-  epochs: 2

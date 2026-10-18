@@ -14,7 +14,8 @@ Step names: any config name trains that config, plus
   logits                                                  re-evaluate old runs to save their logits
   detect                                                  every detector in DETECTORS, end to end
   finetune_yolo, detect_ft                                YOLO11m fine-tuned on players, then evaluated
-  demo_infer                                              demo predictions on 60 test clips
+  finetune_yolo_small, detect_ft_small                    the same with YOLO11s (the detector used in the end)
+  demo_live                                               the end-to-end model at every frame of whole rallies
   ensemble                                                late fusion of the combinations in ENSEMBLES
   ensemble_greedy                                         greedy (Caruana) selection over every run
   optuna/<space>                                          gar.tune with configs/optuna/<space>.yaml
@@ -357,34 +358,6 @@ def main():
                     "results",
                     "--rally",
                     *RALLIES,
-                ],
-            )
-        elif step == "demo_infer":  # predictions drawn by the demo videos (gar.demo.render, run locally)
-            detector = next(
-                (
-                    f"results/{w}"
-                    for w in ("yolo11m_volleyball.pt", "yolo11s_volleyball.pt")
-                    if (WORK / "results" / w).exists()
-                ),
-                "yolo11m.pt",
-            )
-            run(
-                step,
-                py
-                + [
-                    "gar.demo.infer",
-                    "--videos",
-                    str(videos),
-                    "--annotations",
-                    annot,
-                    "--detector",
-                    detector,
-                    "--model",
-                    "results/e2e_cnx",
-                    "--clips",
-                    "60",
-                    "--out",
-                    "results/demo_clips.json",
                 ],
             )
         elif step.startswith("optuna/"):

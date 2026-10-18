@@ -124,17 +124,16 @@ Every run writes `results/<name>/`: config, log, checkpoint, `metrics_{val,test}
 All reported numbers come from Kaggle T4 runs: `kaggle/run.py` is the entry point, and
 `scripts/kaggle_push.py` uploads the code and launches it. The public Volleyball dataset on Kaggle
 provides the frames, so nothing large is uploaded. `GAR_OVERLAY` (a YAML merged over every config)
-switches paths and mixed precision without editing the configs. `scripts/smoke_*.sh` run every step
-on 3 videos locally before a Kaggle run.
+switches paths and mixed precision without editing the configs.
 
 ## Repository layout
 
 ```
-configs/          one YAML per experiment (v1/, optuna/, overlays/)
-docs/             DATASET.md, ANALYSIS.md, RESULTS.md, PLAN.md, figures/
+configs/          one YAML per experiment (v1/, optuna/)
+docs/             DATASET.md, ANALYSIS.md, RESULTS.md, figures/
 kaggle/run.py     Kaggle entry point
-scripts/          Kaggle push/queue, smoke tests
-src/gar/          data/, features/, models/, detect/, train.py, evaluate.py, ensemble.py, tune.py
+scripts/          kaggle_push.py: upload the code and launch a Kaggle run
+src/gar/          data/, features/, models/, detect/, demo/, train.py, evaluate.py, ensemble.py, tune.py
 tests/            data and model invariants
 ```
 

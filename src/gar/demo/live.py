@@ -22,14 +22,21 @@ from PIL import Image
 from torchvision import transforms
 
 from gar.data.annotations import load
+from gar.data.crops import expand_to_aspect
 from gar.data.datasets import IMAGENET_MEAN, IMAGENET_STD
 from gar.data.frames import FrameSource
 from gar.data.splits import GROUP_ACTIVITIES, MAX_PLAYERS, PERSON_ACTIONS
-from gar.demo.infer import MODEL_OFFSETS, crop_tensor
 from gar.detect.detectors import build_detector
 from gar.detect.tracker import track
 from gar.models.e2e import build_model, predict_with_actions
 from gar.utils.io import load_config
+
+MODEL_OFFSETS = [-4, -2, 0, 2]  # the end-to-end model's 4 frames (configs/e2e.yaml: indices 1, 3, 5, 7)
+
+
+def crop_tensor(img, box, width, height, size, transform):
+    x1, y1, x2, y2 = expand_to_aspect(tuple(round(v) for v in box), size[0] / size[1], width, height)
+    return transform(img.crop((x1, y1, x2, y2)).resize((128, 256), Image.BILINEAR))
 
 
 def nearest_box(tracks, tid, f):

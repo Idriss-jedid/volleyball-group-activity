@@ -32,8 +32,13 @@ docs/deep-research-report.md
 *.db
 runs/
 
-# demo: generated media and node deps (the final videos live on gh-pages)
-demo/out/
-demo/assets/
-demo/node_modules/
+# local tooling, not part of the repository: the demo video / project page builders (their output
+# lives on gh-pages), smoke-test scripts and overlays, planning notes
+/demo/
+/site/
+configs/overlays/
+scripts/kaggle_queue.sh
+scripts/smoke_*.sh
+docs/PLAN.md
+docs/PROJECT_GUIDE.md
 .opencode

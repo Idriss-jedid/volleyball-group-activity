@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Group Activity Recognition · Volleyball</title>
+<meta name="description" content="A CVPR 2016 hierarchical deep temporal model for volleyball group activity recognition, reproduced, modernized and extended with an end-to-end actor transformer, Optuna, test-time augmentation and nine detectors: 93.9% test accuracy.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0e1a;--card:#141b2e;--line:#243049;--txt:#e8edf7;--mut:#8b97b3;--l:#60a5fa;--r:#fb923c;--ai:#a78bfa;--ok:#34d399}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);line-height:1.6}
+.wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+a{color:#22d3a8}
+.grad{background:linear-gradient(110deg,#60a5fa,#a78bfa 55%,#fb7185);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+header{text-align:center;padding:40px 0 22px}
+h1{font-size:clamp(1.9rem,4.6vw,3rem);font-weight:900;letter-spacing:-.03em;line-height:1.1}
+.author{font-weight:700;margin-top:8px}.author span{color:var(--mut);font-weight:600}
+.btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+.btn{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);color:var(--txt);padding:9px 17px;border-radius:24px;font-weight:700;font-size:.88rem;text-decoration:none}
+.btn:hover{border-color:#a78bfa}
+section{padding:34px 0;border-top:1px solid var(--line)}
+.tag{font-family:'JetBrains Mono',monospace;font-size:.74rem;letter-spacing:.2em;text-transform:uppercase;font-weight:700;margin-bottom:6px;color:var(--mut)}
+h2{font-size:1.55rem;font-weight:900;letter-spacing:-.02em;margin-bottom:14px}
+.abstract{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 26px;color:#cdd6ea}
+.abstract b{color:var(--txt)}
+.kw{margin-top:12px;color:var(--mut);font-size:.88rem}
+video,img.fig{width:100%;border-radius:16px;border:1px solid var(--line);display:block;background:#000}
+img.fig{cursor:zoom-in}
+.cap{color:var(--mut);font-size:.86rem;text-align:center;margin-top:8px}
+.chapters{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px;justify-content:center}
+.chapters button{font:inherit;font-size:.8rem;font-weight:700;color:var(--txt);background:var(--card);border:1px solid var(--line);border-radius:18px;padding:5px 12px;cursor:pointer}
+.chapters button:hover{border-color:#a78bfa}
+.chapters button span{font-family:'JetBrains Mono',monospace;color:#a78bfa;margin-right:6px}
+.nums{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:6px}
+@media(max-width:800px){.nums{grid-template-columns:repeat(2,1fr)}}
+.num{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;text-align:center}
+.num b{display:block;font-size:1.9rem;font-weight:900;letter-spacing:-.03em}
+.num span{color:var(--mut);font-size:.82rem;font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}
+@media(max-width:800px){.grid2{grid-template-columns:1fr}}
+.more{text-align:center;padding:30px 0 6px}
+#lb{position:fixed;inset:0;background:rgba(5,8,16,.95);display:none;align-items:center;justify-content:center;z-index:50;cursor:zoom-out;padding:20px}
+#lb.on{display:flex}#lb img{max-width:100%;max-height:100%;border-radius:10px}
+footer{padding:30px 0;text-align:center;color:var(--mut);font-size:.84rem;border-top:1px solid var(--line)}
+</style>
+</head>
+<body>
+
+<header><div class="wrap">
+  <h1 class="grad">Group Activity Recognition in Volleyball</h1>
+  <div class="author">Idriss Abderraouf Jedid <span>· a CVPR 2016 paper reproduced, modernized and extended</span></div>
+  <div class="btns">
+    <a class="btn" href="https://github.com/Idriss-jedid/volleyball-group-activity#readme">📖 Code and full explanation</a>
+    <a class="btn" href="https://github.com/Idriss-jedid/volleyball-group-activity/blob/main/docs/RESULTS.md">📊 All results</a>
+    <a class="btn" href="https://arxiv.org/abs/1607.02643">📄 Original paper</a>
+    <a class="btn" href="https://github.com/mostafa-saad/deep-activity-rec">🏐 Volleyball dataset</a>
+  </div>
+</div></header>
+
+<section id="abstract" style="border-top:none;padding-top:6px"><div class="wrap">
+  <div class="tag">Abstract</div>
+  <div class="abstract">
+    Group activity recognition asks what a team is doing rather than what each person does. In a volleyball rally, the answer (a set, a spike, a pass or a won point, by the left or the right team) depends on what each of the twelve players does and on which side of the net they are.
+    <br><br>
+    This work reimplements the <b>hierarchical deep temporal model</b> of Ibrahim et al. (CVPR 2016), in which a first LSTM describes each player over time and a second LSTM recognizes the team activity from the pooled players, in three versions. <b>V1</b> reproduces the paper faithfully, with AlexNet features and the original protocol: the full model reaches 85.9% test accuracy against the 81.9% reported, and every conclusion of the paper's ablation holds. <b>V2</b> is the modernized version of the course built by the paper's author, with a ResNet50 backbone: the two-stage model with one representation per team reaches <b>91.8%</b>. A preliminary analysis of the labels explains why team pooling matters: the player actions predict the kind of activity with 94% accuracy, but the side only becomes recoverable, at 89%, once the two teams are pooled separately.
+    <br><br>
+    <b>V3</b> extends the model with an actor transformer that attends over every player at every frame and an <b>end-to-end</b> network whose ConvNeXt-T backbone is trained with both the team loss and the player-action loss (92.7%). Optuna hyper-parameter search, mirror test-time augmentation and seed and model ensembles bring the final accuracy to <b>93.9%</b> (macro-F1 94.3) on the 1,337 test clips. To remove the need for ground-truth boxes, nine COCO detectors (YOLO11, YOLOv8, RT-DETR, Faster R-CNN and RetinaNet) and a YOLO11 detector fine-tuned on the players replace the annotated tracks: with the fine-tuned detector, the end-to-end model reaches <b>92.3%</b> from raw frames, 0.4 points below the annotated tracks.
+    <br><br>
+    All models are trained from a single configuration-driven code base, with video-level splits, selection on the validation set only, and every number reported on the official test split.
+    <div class="kw"><b>Keywords:</b> group activity recognition · volleyball · hierarchical LSTM · actor transformer · end-to-end learning · ConvNeXt · ResNet50 · YOLO11 · Faster R-CNN · object tracking · Optuna · test-time augmentation · ensembles · PyTorch</div>
+  </div>
+</div></section>
+
+<section id="demo"><div class="wrap">
+  <div class="tag">Narrated demo</div>
+  <video id="demovid" src="demo.mp4" controls playsinline preload="metadata" poster="img/poster_demo.jpg"></video>
+  <div class="chapters" id="chapters"></div>
+</div></section>
+
+<section id="numbers"><div class="wrap">
+  <div class="tag">Test accuracy · 8 team activities</div>
+  <div class="nums">
+    <div class="num"><b style="color:#94a3b8">81.9%</b><span>paper (AlexNet, Caffe)</span></div>
+    <div class="num"><b style="color:var(--ai)">85.9%</b><span>V1 · faithful reproduction</span></div>
+    <div class="num"><b style="color:var(--l)">91.8%</b><span>V2 · ResNet50, team pooling</span></div>
+    <div class="num"><b style="color:var(--ok)">93.9%</b><span>V3 · end to end + ensemble</span></div>
+  </div>
+</div></section>
+
+<section id="wild"><div class="wrap">
+  <div class="tag">From raw frames, no ground-truth boxes</div>
+  <video src="linkedin.mp4" autoplay muted loop playsinline poster="img/poster_wild.jpg"></video>
+  <div class="cap">A whole rally from a match the model never saw: find the players → what each one does → split the two teams → what the team is doing, frame by frame</div>
+</div></section>
+
+<section id="figures"><div class="wrap">
+  <div class="tag">Highlights</div>
+  <div class="grid2">
+    <img class="fig" src="img/insight.jpg" alt="What the labels alone can tell">
+    <img class="fig" src="img/v2.jpg" alt="ResNet50 baselines B1 to B8">
+    <img class="fig" src="img/ladder.jpg" alt="From 81.9% to 93.9%">
+    <img class="fig" src="img/detect.jpg" alt="Nine detectors">
+  </div>
+</div></section>
+
+<div class="more"><a class="btn" href="https://github.com/Idriss-jedid/volleyball-group-activity#readme">📖 Method, analysis and results in the README</a></div>
+
+<footer><div class="wrap">
+  Built on the <a href="https://github.com/mostafa-saad/deep-activity-rec">Volleyball dataset</a> and the paper by Ibrahim, Muralidharan, Deng, Vahdat and Mori (CVPR 2016) · © Idriss Abderraouf Jedid
+</div></footer>
+
+<div id="lb"><img alt=""></div>
+<script>
+const $ = id => document.getElementById(id);
+const CHAPTERS = /*CHAPTERS*/[];
+const fmt = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+$('chapters').innerHTML = CHAPTERS.map(c => `<button data-t="${c[0]}"><span>${fmt(c[0])}</span>${c[1]}</button>`).join('');
+$('chapters').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; const v = $('demovid'); v.currentTime = +b.dataset.t; v.play(); });
+const lb = $('lb');
+document.addEventListener('click', e => { const im = e.target.closest('img.fig'); if (im) { lb.firstElementChild.src = im.src; lb.classList.add('on'); } else if (e.target.closest('#lb')) lb.classList.remove('on'); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') lb.classList.remove('on'); });
+</script>
+</body>
+</html>

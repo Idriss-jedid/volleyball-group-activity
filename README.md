@@ -1,25 +1,60 @@
-# Group Activity Recognition — Volleyball
+<h1 align="center">Group Activity Recognition in Volleyball</h1>
+<h3 align="center">A CVPR 2016 hierarchical model reproduced, modernized and extended · 93.9% test accuracy</h3>
 
-PyTorch reimplementation of Ibrahim et al., **"A Hierarchical Deep Temporal Model for Group Activity
-Recognition"** (CVPR 2016; extended version arXiv:1607.02643), modernized with current backbones,
-then extended with my own architectures and a detection pipeline.
+<p align="center">
+  <b><a href="https://idriss-jedid.github.io/volleyball-group-activity/">Project page</a></b>
+  &nbsp;·&nbsp; <a href="https://idriss-jedid.github.io/volleyball-group-activity/demo.mp4">Narrated demo</a>
+  &nbsp;·&nbsp; <a href="docs/RESULTS.md">All results</a>
+  &nbsp;·&nbsp; <a href="https://arxiv.org/abs/1607.02643">Original paper</a>
+  &nbsp;·&nbsp; <a href="https://github.com/mostafa-saad/deep-activity-rec">Volleyball dataset</a>
+</p>
 
-The task: given a short volleyball clip, recognize the team activity (8 classes: left/right × set,
-spike, pass, winpoint), using the 12 players and their actions (9 classes).
+<p align="center">
+  <video src="https://idriss-jedid.github.io/volleyball-group-activity/linkedin.mp4" controls autoplay muted loop width="860"></video>
+</p>
+
+## Abstract
+
+Group activity recognition asks what a team is doing rather than what each person does. In a
+volleyball rally, the answer (a set, a spike, a pass or a won point, by the left or the right team)
+depends on what each of the twelve players does and on which side of the net they are.
+
+This work reimplements the hierarchical deep temporal model of Ibrahim et al. (CVPR 2016), in which a
+first LSTM describes each player over time and a second LSTM recognizes the team activity from the
+pooled players, in three versions. **V1** reproduces the paper faithfully, with AlexNet features and
+the original protocol: the full model reaches 85.9% test accuracy against the 81.9% reported, and
+every conclusion of the paper's ablation holds. **V2** is the modernized version of the course built
+by the paper's author, with a ResNet50 backbone: the two-stage model with one representation per team
+reaches 91.8%. A preliminary analysis of the labels explains why team pooling matters: the player
+actions predict the kind of activity with 94% accuracy, but the side only becomes recoverable, at
+89%, once the two teams are pooled separately.
+
+**V3** extends the model with an actor transformer that attends over every player at every frame and
+an end-to-end network whose ConvNeXt-T backbone is trained with both the team loss and the
+player-action loss (92.7%). Optuna hyper-parameter search, mirror test-time augmentation and seed and
+model ensembles bring the final accuracy to **93.9%** (macro-F1 94.3) on the 1,337 test clips. To
+remove the need for ground-truth boxes, nine COCO detectors (YOLO11, YOLOv8, RT-DETR, Faster R-CNN
+and RetinaNet) and a YOLO11 detector fine-tuned on the players replace the annotated tracks: with the
+fine-tuned detector, the end-to-end model reaches 92.3% from raw frames, 0.4 points below the
+annotated tracks.
+
+**Keywords:** group activity recognition · volleyball · hierarchical LSTM · actor transformer ·
+end-to-end learning · ConvNeXt · ResNet50 · YOLO11 · Faster R-CNN · tracking · Optuna ·
+test-time augmentation · ensembles · PyTorch
 
 ## Results (test split, 1,337 clips)
 
 | Model | Test accuracy | Paper (AlexNet) |
 |---|---:|---:|
-| V1 — paper reproduction, full model (AlexNet) | 85.9 | 81.9 |
-| B1 — image classifier (ResNet50) | 80.0 | 66.7 |
-| B7 — two-stage LSTM, one pool over all players | 78.3 | 70.3 |
-| **B8 — two-stage LSTM, pooled per team** (the paper's full model) | **91.8** | **81.9** |
+| V1 · paper reproduction, full model (AlexNet) | 85.9 | 81.9 |
+| B1 · image classifier (ResNet50) | 80.0 | 66.7 |
+| B7 · two-stage LSTM, one pool over all players | 78.3 | 70.3 |
+| **B8 · two-stage LSTM, pooled per team** (the paper's full model) | **91.8** | **81.9** |
 | End-to-end ConvNeXt-T + transformer (group + person losses) | 92.7 | – |
 | Actor transformer, ConvNeXt-T features, Optuna-tuned, 5 seeds | 92.4 ± 0.4 | – |
 | End-to-end ConvNeXt-T, 3 seeds + mirror TTA (equal weights) | 93.8 | – |
 | **Greedy ensemble** (models and weights chosen on val) | **93.9** | – |
-| YOLO11x detections + end-to-end model (no ground-truth boxes) | 85.3 | – |
+| YOLO11s fine-tuned on players + end-to-end ConvNeXt-T (no ground-truth boxes) | 92.3 | – |
 
 Full tables, ablations and analysis: [`docs/RESULTS.md`](docs/RESULTS.md).
 

@@ -9,10 +9,12 @@ run goes on, so one bug does not waste a 10-hour session; results/steps.json rec
 
 Step names: any config name trains that config, plus
   crops, feats_person, feats_image, feats_person_cnx      caches
+  feats_imagenet                                          frozen ImageNet ResNet50 player features
   v1/feats_ft, v1/feats_imagenet, v1/feats_image          V1 (AlexNet fc7) caches
   logits                                                  re-evaluate old runs to save their logits
   detect                                                  every detector in DETECTORS, end to end
   finetune_yolo, detect_ft                                YOLO11m fine-tuned on players, then evaluated
+  demo_infer                                              demo predictions on 60 test clips
   ensemble                                                late fusion of the combinations in ENSEMBLES
   ensemble_greedy                                         greedy (Caruana) selection over every run
   optuna/<space>                                          gar.tune with configs/optuna/<space>.yaml
@@ -53,6 +55,7 @@ ENSEMBLES = [
     ["b8_cnx", "transformer_cnx", "b1_cnx"],
     ["b8", "b8_cnx", "e2e", "e2e_cnx", "transformer_cnx", "b4"],
 ]
+RALLIES = ["20:25465:25615", "14:34385:34635", "5:58450:58675", "34:23485:23655"]  # video:first:last clip
 KEEP_FEATURES = True  # keep data/features in the output so later kernels can reuse them
 
 WORK = Path("/kaggle/working")
@@ -82,9 +85,10 @@ def find_input(predicate):
 
 def reuse_previous_output():
     """Reuse the features and checkpoints of every earlier pipeline kernel attached as input."""
-    for prev in find_all(lambda d: (d / "results").is_dir() and (d / "data" / "features").is_dir()):
+    for prev in find_all(lambda d: (d / "results").is_dir()):
         print(f"reusing outputs of {prev}", flush=True)
-        for feats in (prev / "data" / "features").iterdir():
+        feature_dirs = (prev / "data" / "features").iterdir() if (prev / "data" / "features").is_dir() else []
+        for feats in feature_dirs:
             dst = WORK / "data" / "features" / feats.name
             dst.parent.mkdir(parents=True, exist_ok=True)
             if not dst.exists():
@@ -104,9 +108,12 @@ def main():
     import torch  # never run the pipeline on CPU: it would burn hours for nothing
 
     print(f"torch {torch.__version__} | cuda available: {torch.cuda.is_available()}", flush=True)
-    if not torch.cuda.is_available():
+    if torch.cuda.is_available():
+        print(f"gpu: {torch.cuda.get_device_name(0)}", flush=True)
+    elif all(step.startswith("demo") for step in STEPS):  # inference only: slow on CPU, but it runs
+        print(f"no GPU: demo inference on {os.cpu_count()} CPU cores", flush=True)
+    else:
         sys.exit("no GPU attached: check the accelerator setting / phone verification of the account")
-    print(f"gpu: {torch.cuda.get_device_name(0)}", flush=True)
 
     overlay = WORK / "kaggle_overlay.yaml"
     overlay.write_text(
@@ -205,7 +212,7 @@ def main():
         shutil.rmtree(f"{det}/crops", ignore_errors=True)
         shutil.rmtree(f"data/features/person_ft_det_{name}", ignore_errors=True)
 
-    if any(step.startswith(("detect", "finetune")) for step in STEPS):
+    if any(step.startswith(("detect", "finetune", "demo")) for step in STEPS):
         subprocess.run([sys.executable, "-m", "pip", "install", "-q", "ultralytics"], check=False)
 
     for step in STEPS:
@@ -227,6 +234,8 @@ def main():
             )
         elif step == "feats_person":
             extract(step, "person", "results/person/best.pt", "--name", "person_ft")
+        elif step == "feats_imagenet":  # frozen ImageNet ResNet50 (paper B2 / B5 in V2)
+            extract(step, "person", None, "--name", "imagenet_r50")
         elif step == "feats_person_cnx":
             extract(step, "person_cnx", "results/person_cnx/best.pt", "--name", "person_cnx")
         elif step == "feats_image":
@@ -266,8 +275,118 @@ def main():
                     "results",
                 ],
             )
+        elif step == "finetune_yolo_fast":  # same, 960 px, 15 epochs, images cached in RAM
+            run(
+                step,
+                py
+                + [
+                    "gar.detect.finetune",
+                    "--videos",
+                    str(videos),
+                    "--annotations",
+                    annot,
+                    "--out",
+                    "data/processed/yolo_ft",
+                    "--weights",
+                    "yolo11m.pt",
+                    "--name",
+                    "yolo11m_volleyball",
+                    "--results",
+                    "results",
+                    "--imgsz",
+                    "960",
+                    "--epochs",
+                    "15",
+                    "--cache",
+                    "ram",
+                ],
+            )
+        elif step == "finetune_yolo_small":  # same, 960 px, 15 epochs, images cached in RAM
+            run(
+                step,
+                py
+                + [
+                    "gar.detect.finetune",
+                    "--videos",
+                    str(videos),
+                    "--annotations",
+                    annot,
+                    "--out",
+                    "data/processed/yolo_ft",
+                    "--weights",
+                    "yolo11s.pt",
+                    "--name",
+                    "yolo11s_volleyball",
+                    "--results",
+                    "results",
+                    "--imgsz",
+                    "960",
+                    "--epochs",
+                    "15",
+                    "--cache",
+                    "ram",
+                ],
+            )
         elif step == "detect_ft":
             detect_one("results/yolo11m_volleyball.pt", "yolo11m_volleyball")
+        elif step == "detect_ft_small":
+            detect_one("results/yolo11s_volleyball.pt", "yolo11s_volleyball")
+        elif step == "demo_live":  # the model re-run at every frame of whole rallies (moving bars in the demo)
+            detector = next(
+                (
+                    f"results/{w}"
+                    for w in ("yolo11m_volleyball.pt", "yolo11s_volleyball.pt")
+                    if (WORK / "results" / w).exists()
+                ),
+                "yolo11m.pt",
+            )
+            run(
+                step,
+                py
+                + [
+                    "gar.demo.live",
+                    "--videos",
+                    str(videos),
+                    "--annotations",
+                    annot,
+                    "--detector",
+                    detector,
+                    "--model",
+                    "results/e2e_cnx",
+                    "--out-dir",
+                    "results",
+                    "--rally",
+                    *RALLIES,
+                ],
+            )
+        elif step == "demo_infer":  # predictions drawn by the demo videos (gar.demo.render, run locally)
+            detector = next(
+                (
+                    f"results/{w}"
+                    for w in ("yolo11m_volleyball.pt", "yolo11s_volleyball.pt")
+                    if (WORK / "results" / w).exists()
+                ),
+                "yolo11m.pt",
+            )
+            run(
+                step,
+                py
+                + [
+                    "gar.demo.infer",
+                    "--videos",
+                    str(videos),
+                    "--annotations",
+                    annot,
+                    "--detector",
+                    detector,
+                    "--model",
+                    "results/e2e_cnx",
+                    "--clips",
+                    "60",
+                    "--out",
+                    "results/demo_clips.json",
+                ],
+            )
         elif step.startswith("optuna/"):
             space = step.split("/", 1)[1]
             run(

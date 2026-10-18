@@ -1,0 +1,6 @@
+# Paper B2 in V2 (ResNet50): frozen ImageNet player features, max-pooled over all players, softmax.
+# Not in the course slides; added so the V2 column covers every paper baseline. Paper (AlexNet): 64.6%.
+defaults: b3.yaml
+features: imagenet_r50
+model_args:
+  hidden: 0

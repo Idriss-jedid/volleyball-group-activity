@@ -1,0 +1,4 @@
+# Paper B5 in V2 (ResNet50): frozen ImageNet player features pooled over all players -> scene LSTM.
+# Not the course's B5 (which is the paper's B7). Paper (AlexNet): 67.6%.
+defaults: b6.yaml
+features: imagenet_r50

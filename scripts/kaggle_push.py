@@ -52,7 +52,7 @@ def push_code():
         kaggle("datasets", "create", "-p", str(out), "--dir-mode", "zip")
 
 
-def push_kernel(name, steps, reuse, timeout=None):
+def push_kernel(name, steps, reuse, timeout=None, cpu=False):
     out = BUILD / name
     shutil.rmtree(out, ignore_errors=True)
     out.mkdir(parents=True)
@@ -69,19 +69,18 @@ def push_kernel(name, steps, reuse, timeout=None):
                 "language": "python",
                 "kernel_type": "script",
                 "is_private": True,
-                "enable_gpu": True,
+                "enable_gpu": not cpu,
                 "enable_internet": True,
                 "dataset_sources": SOURCES,
                 "competition_sources": [],
-                "kernel_sources": [f"{USER}/{k}" for k in reuse],
-                "machine_shape": "NvidiaTeslaT4",
+                "kernel_sources": [k if "/" in k else f"{USER}/{k}" for k in reuse],  # owner/slug for another account
+                **({} if cpu else {"machine_shape": "NvidiaTeslaT4"}),
             },
             indent=2,
         )
     )
-    kaggle(
-        "kernels", "push", "-p", str(out), "--accelerator", "NvidiaTeslaT4", *(["-t", str(timeout)] if timeout else [])
-    )
+    accelerator = [] if cpu else ["--accelerator", "NvidiaTeslaT4"]
+    kaggle("kernels", "push", "-p", str(out), *accelerator, *(["-t", str(timeout)] if timeout else []))
 
 
 def main():
@@ -91,11 +90,12 @@ def main():
     parser.add_argument("--steps", nargs="*", help="override STEPS in kaggle/run.py")
     parser.add_argument("--reuse", nargs="*", default=[], help="kernels whose output is attached as input")
     parser.add_argument("--timeout", type=int, help="seconds; Kaggle's own limit still applies")
+    parser.add_argument("--cpu", action="store_true", help="no GPU (demo inference only, when the GPU queue is stuck)")
     args = parser.parse_args()
     if args.action == "code":
         push_code()
     elif args.action == "kernel":
-        push_kernel(args.name, args.steps, args.reuse, args.timeout)
+        push_kernel(args.name, args.steps, args.reuse, args.timeout, args.cpu)
     elif args.action == "status":
         kaggle("kernels", "status", f"{USER}/{args.name}")
     else:

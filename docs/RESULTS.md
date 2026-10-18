@@ -95,6 +95,21 @@ Table 6 of the paper (pooling variants of the full model):
 - Unlike the paper, removing the person LSTM (B6, 91.2) costs less than removing the scene LSTM
   (B5, 90.3) here; the gap is small either way.
 
+### Paper B2 / B5 in V2 (kernel `gar-v2b`)
+
+The course leaves out the paper's B2 and B5 because both use frozen ImageNet features ("Don't try
+anything that doesn't finetune"). Run with ResNet50 for completeness:
+
+| Paper baseline, ResNet50 | Test acc | Test macro-F1 | Paper (AlexNet) |
+|---|---:|---:|---:|
+| B2 — frozen ImageNet player features, pooled, softmax | 47.9 | 46.7 | 64.6 |
+| B5 — frozen ImageNet player features, pooled, scene LSTM | 57.8 | 53.4 | 67.6 |
+| *B3 — fine-tuned player features, pooled* | *75.1* | *71.9* | *68.1* |
+
+Fine-tuning the player CNN is worth +27 points over frozen ImageNet features here, which is the
+reason the course skips these two baselines. As in V1, the frozen-feature baselines stay below the
+paper's numbers.
+
 ## V3 — beyond the paper (kernel `gar-ablation`)
 
 | Run | What | Test acc | Test macro-F1 |
@@ -177,6 +192,25 @@ unchanged on the detected players of the 1,337 test clips. Speed is measured on 
   its CNN was trained with the group loss and copes better with loose or shifted crops.
 - The YOLO family dominates this setting; RT-DETR-L and RetinaNet, although strong on COCO, find fewer
   of the small, distant players at their default input size.
+
+### YOLO11s fine-tuned on players (kernels `gar-yolo-s`, `gar-demo`)
+
+YOLO11s (COCO weights) fine-tuned on one class, "player", with the tracked boxes of 3 frames per
+train clip (6,456 images), 960 px, 15 epochs. Validation on 400 val clips (4,761 players): precision
+97.8, recall 95.9, mAP50 98.7, mAP50-95 60.5. Then the same evaluation as the COCO detectors above:
+
+| Detector | FPS | Recall | Precision | B8 | Transformer | e2e | e2e ConvNeXt-T |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| YOLO11x (COCO, best of the nine) | 6.0 | 84.1 | 93.2 | 81.5 | 82.7 | 85.3 | – |
+| **YOLO11s fine-tuned on players** | **38.7** | **96.1** | **96.9** | **90.2** | **89.9** | **89.7** | **92.3** |
+| *ground-truth tracks* | – | 100 | 100 | 91.8 | 90.8 | 91.5 | 92.7 |
+
+- **From raw frames, without any ground-truth box, the end-to-end ConvNeXt-T model reaches 92.3%**,
+  0.4 points below the same model on the annotated tracks.
+- Fine-tuning turns a small detector into the best one by far: recall 84 → 96%, at 6.5x the speed of
+  YOLO11x. The COCO detectors box referees, line judges and the crowd and miss players in odd poses
+  (a setter in the air, a defender on the floor); the fine-tuned detector learns exactly the
+  annotators' notion of a player.
 
 ## V3 — test-time augmentation, seeds and final ensemble (kernel `gar-boost`)
 

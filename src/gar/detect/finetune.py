@@ -82,6 +82,12 @@ def main():
     parser.add_argument("--epochs", type=int, default=30)
     parser.add_argument("--imgsz", type=int, default=1280)
     parser.add_argument("--batch", type=int, default=8)
+    parser.add_argument(
+        "--cache",
+        choices=["none", "ram", "disk"],
+        default="none",
+        help="decode the images once: on Kaggle's 4 CPUs, JPEG decoding + augmentation starve the GPU",
+    )
     parser.add_argument("--only-videos", type=int, nargs="*", help="debugging subset")
     args = parser.parse_args()
 
@@ -108,6 +114,7 @@ def main():
         close_mosaic=5,
         fliplr=0.5,
         single_cls=True,
+        cache=False if args.cache == "none" else args.cache,
         plots=False,
         verbose=False,
     )

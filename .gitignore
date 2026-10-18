@@ -31,3 +31,9 @@ docs/deep-research-report.md
 .claude/
 *.db
 runs/
+
+# demo: generated media and node deps (the final videos live on gh-pages)
+demo/out/
+demo/assets/
+demo/node_modules/
+.opencode

@@ -1,0 +1,85 @@
+[
+  {"id": "hook", "lines": [
+    "This is a few seconds of a volleyball match.",
+    "As humans, we see straight away what is happening: the left team is attacking, with a spike.",
+    "The goal of this project is to teach a computer to understand that, automatically, from the video."
+  ]},
+  {"id": "goal", "lines": [
+    "This task is called group activity recognition: not what one person does, but what the whole team does.",
+    "It is useful for sports analytics, for automatic highlights, and for coaching.",
+    "In volleyball, there are eight team activities: a set, a spike, a pass, or winning the point, for the left or for the right team."
+  ]},
+  {"id": "paper", "lines": [
+    "To solve it, I started from a well-known paper.",
+    "A Hierarchical Deep Temporal Model for Group Activity Recognition, by Mostafa Ibrahim and his colleagues, published at CVPR in 2016.",
+    "It introduced the Volleyball dataset, which is still a reference for this problem today."
+  ]},
+  {"id": "plan", "lines": [
+    "My work follows three phases.",
+    "First, I reimplemented the paper, as faithfully as possible.",
+    "Second, I modernized it, following the course of the paper's author.",
+    "And third, I replaced the architecture with my own design."
+  ]},
+  {"id": "data", "lines": [
+    "Before building any model, I studied the data.",
+    "Fifty-five matches, and four thousand eight hundred clips. In every clip, the twelve players have a box, and a label saying what they do.",
+    "Most players are simply standing, so the important actions, like a spike or a set, are rare."
+  ]},
+  {"id": "insight", "lines": [
+    "I also measured what these labels can tell us.",
+    "Knowing what each player does, the kind of activity is ninety-four percent predictable.",
+    "But left or right is a coin flip, unless the two teams are kept apart. Then it jumps to eighty-nine percent. Keep this in mind, it comes back later."
+  ]},
+  {"id": "model", "lines": [
+    "Here is the model of the paper. This figure comes from the paper itself.",
+    "Each player is cropped from the image, and a convolutional network describes what he looks like.",
+    "A first LSTM follows each player over time, to understand his action.",
+    "Then all the players are pooled together, into one description of the scene.",
+    "And a second LSTM follows the scene over time, to decide the team activity."
+  ]},
+  {"id": "v1", "lines": [
+    "Phase one. I rewrote this model in PyTorch, with the same AlexNet network and the same training protocol.",
+    "My reproduction reaches eighty-five point nine percent, where the paper reports eighty-one point nine.",
+    "And every conclusion of the paper is confirmed, which validates my implementation."
+  ]},
+  {"id": "v2", "lines": [
+    "Phase two. I modernized the pipeline.",
+    "I replaced AlexNet with ResNet50, kept the full wide frame, and added mirrored training images.",
+    "Then I rebuilt the eight baselines of the course, step by step, from a simple image classifier to the full model.",
+    "Every baseline improves, by seven to nineteen points over the paper."
+  ]},
+  {"id": "teams", "lines": [
+    "The most important change is this one.",
+    "Instead of mixing the twelve players together, they are split into the left team and the right team, and each team gets its own summary.",
+    "This single idea takes the model from seventy-eight to almost ninety-two percent. Exactly what the data analysis predicted."
+  ]},
+  {"id": "v3", "lines": [
+    "Phase three. I replaced the architecture itself.",
+    "Instead of two LSTMs and a pooling, I use a transformer.",
+    "Every player, at every moment, becomes a token, and each token can look at all the others. This is called attention.",
+    "And instead of training in two separate stages, the whole network learns at once, with two goals: each player's action, and the team activity."
+  ]},
+  {"id": "ladder", "lines": [
+    "This new design reaches ninety-two point seven percent.",
+    "I then tuned it with Optuna, averaged each clip with its mirror image, and combined several models.",
+    "The final accuracy is ninety-three point nine percent, on matches the model has never seen."
+  ]},
+  {"id": "detect", "lines": [
+    "One question remained. In a real video, nobody gives us the boxes of the players.",
+    "So I tested nine object detectors, from YOLO to Faster R-CNN, and measured how my model works with each of them."
+  ]},
+  {"id": "finetune", "lines": [
+    "Off the shelf, they also detect referees and line judges, and they miss players in unusual poses.",
+    "So I fine-tuned YOLO on the players. It now finds ninety-six percent of them, at almost forty frames per second.",
+    "And from the raw video, without a single annotated box, the system still reaches ninety-two point three percent."
+  ]},
+  {"id": "live", "lines": [
+    "Here is the complete system, on a full rally from a match it has never seen.",
+    "It finds the players, recognizes what each one does, splits the two teams, and the bars show its decision, frame after frame."
+  ]},
+  {"id": "end", "lines": [
+    "To sum up: I reproduced the paper, improved it by ten points, and designed my own architecture, which reaches ninety-three point nine percent.",
+    "Three lessons. Keep the teams apart. Train the whole network end to end. And use simple tricks, like test-time augmentation.",
+    "Thank you for watching. The code and all the results are on GitHub."
+  ]}
+]

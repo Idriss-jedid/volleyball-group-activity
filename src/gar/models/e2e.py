@@ -55,6 +55,20 @@ class EndToEnd(nn.Module):
         return logits, self.person_weight * aux
 
 
+@torch.no_grad()
+def predict_with_actions(model, crops, mask, boxes):
+    """Group logits (B, 8) and per-player action probabilities (B, K, 9), averaged over the frames."""
+    model.eval()
+    b, t, k = crops.shape[:3]
+    valid = mask[:, None, :].expand(b, t, k)
+    feats = model.backbone(crops[valid])
+    grid = feats.new_zeros(b, t, k, model.dim)
+    grid[valid] = feats
+    person = feats.new_zeros(b, t, k, len(PERSON_ACTIONS))
+    person[valid] = model.person_head(feats).softmax(-1)
+    return model.actor(grid, mask, boxes), person.mean(1)
+
+
 def build_model(cfg):
     a = dict(cfg["model_args"])
     if a.get("init"):

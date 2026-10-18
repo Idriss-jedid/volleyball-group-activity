@@ -68,8 +68,7 @@ Full tables, ablations and analysis: [`docs/RESULTS.md`](docs/RESULTS.md).
 
 ## What the data says
 
-Before modelling, [`docs/DATASET.md`](docs/DATASET.md) and [`docs/ANALYSIS.md`](docs/ANALYSIS.md)
-document the dataset and what it implies. The key finding drives the whole project: with ground-truth
+Before modelling, I analysed the dataset and its labels. The key finding drives the whole project: with ground-truth
 person actions, the activity *kind* (set/spike/pass/winpoint) is 94% predictable, but the *side*
 (left/right) is chance unless the representation keeps the two teams apart. Pooling all players
 together caps the label information near 50%; pooling per team lifts it to ~86%. The experiments
@@ -115,26 +114,20 @@ python -m gar.train --config configs/b8.yaml
 python -m gar.tune --space configs/optuna/transformer.yaml --name optuna_transformer
 python -m gar.ensemble --greedy
 python -m gar.detect.pipeline --detector yolo11m.pt
-pytest -q && ruff check .
 ```
 
 Every run writes `results/<name>/`: config, log, checkpoint, `metrics_{val,test}.json`,
 `logits_{val,test}.npz`, confusion matrices.
 
-All reported numbers come from Kaggle T4 runs: `kaggle/run.py` is the entry point, and
-`scripts/kaggle_push.py` uploads the code and launches it. The public Volleyball dataset on Kaggle
-provides the frames, so nothing large is uploaded. `GAR_OVERLAY` (a YAML merged over every config)
-switches paths and mixed precision without editing the configs.
+All reported numbers come from runs on Kaggle T4 GPUs. `GAR_OVERLAY` (a YAML merged over every
+config) switches paths and mixed precision without editing the configs.
 
 ## Repository layout
 
 ```
 configs/          one YAML per experiment (v1/, optuna/)
-docs/             DATASET.md, ANALYSIS.md, RESULTS.md, figures/
-kaggle/run.py     Kaggle entry point
-scripts/          kaggle_push.py: upload the code and launch a Kaggle run
-src/gar/          data/, features/, models/, detect/, demo/, train.py, evaluate.py, ensemble.py, tune.py
-tests/            data and model invariants
+docs/RESULTS.md   every result table
+src/gar/          data/, features/, models/, detect/, train.py, evaluate.py, ensemble.py, tune.py
 ```
 
 ## References

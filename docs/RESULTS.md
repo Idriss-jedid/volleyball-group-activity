@@ -26,14 +26,14 @@ Person-level models (9 actions):
 ## What the baselines show
 
 - **Team-wise pooling is the decisive component: B7 → B8 is +13.5 points** (78.3 → 91.8), the same
-  architecture with one `concat` of two pools instead of one pool. `docs/ANALYSIS.md` §2 predicted it
-  from the labels alone: with ground-truth actions, a global pool caps the 8-class accuracy near 50%
+  architecture with one `concat` of two pools instead of one pool. An analysis of the labels predicted it:
+  with ground-truth actions, a global pool caps the 8-class accuracy near 50%
   because it cannot tell left from right, while a per-team pool lifts it to ~86%.
 - All one-group models (B3, B5, B6, B7) sit between 74% and 78%, below the plain image model B1
   (80.0%): pooling every player together throws away exactly what an image model keeps, the side.
 - **B4 > B1 here (81.9 vs 80.0), the opposite of the paper (63.1 vs 66.7).** The paper explains its
   inversion by camera motion corrupting whole-frame features. With a 9-frame window that stays inside
-  one rally phase (`ANALYSIS.md` §5) and features from the fine-tuned B1, temporal context helps.
+  one rally phase and features from the fine-tuned B1, temporal context helps.
 - Temporal modelling helps person actions too: the person LSTM gains +3.3 macro-F1 over the
   single-frame classifier (70.1 vs 66.8), mostly on the rare actions.
 - Every baseline beats its paper counterpart by 7–19 points; the backbone (ResNet50 vs AlexNet), the
